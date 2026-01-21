@@ -1,7 +1,7 @@
 import { instrument } from "succinct-async";
 import { getTagValues } from "@welshman/util";
 import { Alert, ALERT } from "./alert.js";
-import * as worker from "./worker/index.js";
+import * as worker from "./worker.js";
 import * as db from "./database.js";
 
 export type AddAlertParams = Pick<Alert, "event" | "tags">;
@@ -11,7 +11,7 @@ export const addAlert = instrument(
   async ({ event, tags }: AddAlertParams) => {
     const alert = await db.insertAlert(event, tags);
 
-    worker.registerAlert(alert);
+    worker.addListener(alert);
 
     return alert;
   },
@@ -37,7 +37,7 @@ export const processDelete = instrument(
 
       if (alert) {
         await db.deleteAlertByAddress(address);
-        worker.unregisterAlert(alert);
+        worker.removeListener(alert);
       }
     }
 
@@ -46,7 +46,7 @@ export const processDelete = instrument(
 
       if (alert?.pubkey === event.pubkey) {
         await db.deleteAlertById(id);
-        worker.unregisterAlert(alert);
+        worker.removeListener(alert);
       }
     }
   },

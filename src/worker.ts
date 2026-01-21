@@ -1,16 +1,15 @@
-import { parseJson, identity } from "@welshman/lib";
+import { parseJson, removeUndefined } from "@welshman/lib";
 import { request } from "@welshman/net";
 import { getTagValues, getTagValue, normalizeRelayUrl } from "@welshman/util";
-import { Alert } from "../alert.js";
+import { deleteAlertByAddress } from "./database.js";
+import { Alert } from "./alert.js";
 
 const listenersByAddress = new Map();
 
 const createListener = (alert: Alert) => {
-  const server = getTagValue("server", alert.tags)!;
+  const callback = getTagValue("callback", alert.tags)!;
   const relays = getTagValues("relay", alert.tags).map(normalizeRelayUrl);
-  const filters = getTagValues("filter", alert.tags)
-    .map(parseJson)
-    .filter(identity);
+  const filters = removeUndefined(getTagValues("filter", alert.tags).map(parseJson))
   const controller = new AbortController();
   const { signal } = controller;
 
@@ -18,17 +17,19 @@ const createListener = (alert: Alert) => {
     relays,
     filters,
     signal,
-    onEvent: (event) => {
-      fetch(server, {
+    onEvent: async (event, relay) => {
+      const res = await fetch(callback, {
         method: "POST",
+        body: JSON.stringify({relay, event}),
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          event: alert.event,
-          config: alert.tags,
-        }),
       });
+
+      if (res.status === 404) {
+        removeListener(alert)
+        deleteAlertByAddress(alert.address)
+      }
     },
   });
 
@@ -36,11 +37,15 @@ const createListener = (alert: Alert) => {
 };
 
 export const addListener = (alert: Alert) => {
+  console.log("registering job", alert.address);
+
   listenersByAddress.get(alert.address)?.stop();
   listenersByAddress.set(alert.address, createListener(alert));
 };
 
 export const removeListener = (alert: Alert) => {
+  console.log("unregistering job", alert.address);
+
   listenersByAddress.get(alert.address)?.stop();
   listenersByAddress.delete(alert.address);
 };

@@ -2,7 +2,7 @@ import { serve } from "@hono/node-server";
 import { PORT } from "./env.js";
 import { app, injectWebSocket } from "./server.js";
 import { migrate, getActiveAlerts } from "./database.js";
-import { registerAlert } from "./worker/index.js";
+import * as worker from "./worker.js";
 
 process.on("unhandledRejection", (error: Error) => {
   console.error("Unhandled rejection:", error.stack);
@@ -25,6 +25,6 @@ migrate().then(async () => {
   console.log("Running on port", PORT);
 
   for (const alert of await getActiveAlerts()) {
-    registerAlert(alert);
+    worker.addListener(alert);
   }
 });
