@@ -119,12 +119,13 @@ export async function insertAlert(event: SignedEvent, tags: string[][]) {
     parseAlert(
       await get(
         `INSERT INTO alerts (address, id, pubkey, created_at, tags, event)
-         VALUES (?, ?, ?, ?)
+         VALUES (?, ?, ?, ?, ?, ?)
          ON CONFLICT(address) DO UPDATE SET
           id=excluded.id,
-          event=excluded.event,
+          pubkey=excluded.pubkey,
+          created_at=excluded.created_at,
           tags=excluded.tags,
-          created_at=excluded.created_at
+          event=excluded.event
          RETURNING *`,
         [
           getAddress(event),
