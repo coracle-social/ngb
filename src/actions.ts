@@ -13,6 +13,8 @@ export const addAlert = instrument(
 
     worker.addListener(alert);
 
+    console.log(`Created alert ${alert.address}`)
+
     return alert;
   },
 );
@@ -36,6 +38,7 @@ export const processDelete = instrument(
       const alert = await db.getAlertByAddress(address);
 
       if (alert) {
+        console.log(`Deleting alert ${address}`)
         await db.deleteAlertByAddress(address);
         worker.removeListener(alert);
       }
@@ -45,6 +48,7 @@ export const processDelete = instrument(
       const alert = await db.getAlertById(id);
 
       if (alert?.pubkey === event.pubkey) {
+        console.log(`Deleting alert ${id}`)
         await db.deleteAlertById(id);
         worker.removeListener(alert);
       }

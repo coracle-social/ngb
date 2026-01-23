@@ -1,10 +1,13 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { createNodeWebSocket } from "@hono/node-ws";
 import type { Context } from "hono";
-import { appSigner } from "./env.js";
+import { appSigner, CORS_DOMAIN } from "./env.js";
 import { Connection } from "./relay.js";
 
 export const app = new Hono();
+
+app.use("/*", cors({ origin: CORS_DOMAIN }));
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
@@ -16,9 +19,12 @@ app.get("/", async (c: Context) => {
       {
         name: "Nostr Push Bridge",
         icon: "https://pfp.nostr.build/2644089e06a950889fa4aa81f6152a51fba23497735cbba351aa6972460df6f5.jpg",
-        description: "A relay which accepts kind 30390 push notification subscriptions on behalf of public relays.",
+        description:
+          "A relay which accepts kind 30390 push notification subscriptions on behalf of public relays.",
+        self: await appSigner.getPubkey(),
         pubkey: await appSigner.getPubkey(),
         software: "https://github.com/coracle-social/npb",
+        supported_nips: ["1", "9", "11", "42", "9a"],
       },
       200,
       { "Content-Type": "application/nostr+json; charset=utf-8" },
