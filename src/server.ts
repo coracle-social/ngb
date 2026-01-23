@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createNodeWebSocket } from "@hono/node-ws";
-import type { Context } from "hono";
+import type { Context, Next } from "hono";
 import { appSigner, CORS_DOMAIN } from "./env.js";
 import { Connection } from "./relay.js";
 
@@ -11,8 +11,10 @@ app.use("/*", cors({ origin: CORS_DOMAIN }));
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
-app.get("/", async (c: Context) => {
-  if (c.req.header("Accept") !== "application/nostr+json") {
+app.get("/", async (c: Context, next: Next) => {
+  if (c.req.header("Upgrade") === "websocket") {
+    await next();
+  } else if (c.req.header("Accept") !== "application/nostr+json") {
     return c.json({ error: "Not found" }, 404);
   } else {
     return c.json(
