@@ -28,7 +28,7 @@ const createListener = (alert: Alert) => {
           },
         });
 
-        if (res.status === 404) {
+        if (!res.ok) {
           removeListener(alert)
           deleteAlertByAddress(alert.address)
         }

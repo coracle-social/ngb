@@ -11,9 +11,10 @@ import {
   getTags,
   getAddress,
 } from "@welshman/util";
+import { DATA_DIR } from "./env.js";
 import type { Alert } from "./alert.js";
 
-const db = new sqlite3.Database("db");
+const db = new sqlite3.Database(DATA_DIR + "/db");
 
 type Param = number | string | boolean;
 
