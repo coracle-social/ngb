@@ -10,7 +10,7 @@ import {
   getTagValues,
   verifyEvent,
 } from "@welshman/util";
-import { appSigner } from "./env.js";
+import { signer } from "./env.js";
 import { ALERT } from "./alert.js";
 import { getAlertsForPubkey } from "./database.js";
 import { addAlert, processDelete } from "./actions.js";
@@ -156,7 +156,7 @@ export class Connection {
   }
 
   private async handleAlertRequest(event: SignedEvent) {
-    const pubkey = await appSigner.getPubkey();
+    const pubkey = await signer.getPubkey();
 
     if (!getTagValues("p", event.tags).includes(pubkey)) {
       return this.send(["OK", event.id, false, "Event must p-tag this relay"]);
@@ -164,7 +164,7 @@ export class Connection {
 
     let plaintext: string;
     try {
-      plaintext = await decrypt(appSigner, event.pubkey, event.content);
+      plaintext = await decrypt(signer, event.pubkey, event.content);
     } catch (e) {
       return this.send([
         "OK",

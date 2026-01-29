@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { createNodeWebSocket } from "@hono/node-ws";
 import type { Context, Next } from "hono";
-import { appSigner, CORS_DOMAIN } from "./env.js";
+import { signer, CORS_DOMAIN } from "./env.js";
 import { Connection } from "./relay.js";
 
 export const app = new Hono();
@@ -23,8 +23,8 @@ app.get("/", async (c: Context, next: Next) => {
         icon: "https://pfp.nostr.build/2644089e06a950889fa4aa81f6152a51fba23497735cbba351aa6972460df6f5.jpg",
         description:
           "A relay which accepts kind 30390 push notification subscriptions on behalf of public relays.",
-        self: await appSigner.getPubkey(),
-        pubkey: await appSigner.getPubkey(),
+        self: await signer.getPubkey(),
+        pubkey: await signer.getPubkey(),
         software: "https://github.com/coracle-social/npb",
         supported_nips: ["1", "9", "11", "42", "9a"],
       },

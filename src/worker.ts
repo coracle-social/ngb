@@ -1,6 +1,7 @@
 import { parseJson, removeUndefined } from "@welshman/lib";
 import { request } from "@welshman/net";
 import { getTagValues, matchFilters, getTagValue, normalizeRelayUrl } from "@welshman/util";
+import { signer } from "./env.js";
 import { deleteAlertByAddress } from "./database.js";
 import { Alert } from "./alert.js";
 
@@ -20,9 +21,12 @@ const createListener = (alert: Alert) => {
     signal,
     onEvent: async (event, relay) => {
       if (!matchFilters(ignore, event)) {
+        const id = event.id
+        const json = JSON.stringify(event)
+        const payload = await signer.nip44.encrypt(alert.pubkey, json)
         const res = await fetch(callback, {
           method: "POST",
-          body: JSON.stringify({relay, event}),
+          body: JSON.stringify({id, relay, payload}),
           headers: {
             "Content-Type": "application/json",
           },
